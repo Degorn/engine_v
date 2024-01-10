@@ -42,7 +42,6 @@ void Canvas::Initialize(std::optional<Rect> cull_rect) {
   base_pass_ = std::make_unique<EntityPass>();
   current_pass_ = base_pass_.get();
   xformation_stack_.emplace_back(CanvasStackEntry{.cull_rect = cull_rect});
-  lazy_glyph_atlas_ = std::make_shared<LazyGlyphAtlas>();
   FML_DCHECK(GetSaveCount() == 1u);
   FML_DCHECK(base_pass_->GetSubpassesDepth() == 1u);
 }
@@ -51,7 +50,6 @@ void Canvas::Reset() {
   base_pass_ = nullptr;
   current_pass_ = nullptr;
   xformation_stack_ = {};
-  lazy_glyph_atlas_ = nullptr;
 }
 
 void Canvas::Save() {
@@ -401,10 +399,14 @@ void Canvas::DrawPoints(std::vector<Point> points,
   GetCurrentPass().AddEntity(entity);
 }
 
-void Canvas::DrawPicture(Picture picture) {
+void Canvas::DrawPicture(const Picture& picture) {
   if (!picture.pass) {
     return;
   }
+
+  auto save_count = GetSaveCount();
+  Save();
+
   // Clone the base pass and account for the CTM updates.
   auto pass = picture.pass->Clone();
   pass->IterateAllEntities([&](auto& entity) -> bool {
@@ -413,7 +415,9 @@ void Canvas::DrawPicture(Picture picture) {
                              entity.GetTransformation());
     return true;
   });
-  return;
+  GetCurrentPass().AddSubpassInline(std::move(pass));
+
+  RestoreToCount(save_count);
 }
 
 void Canvas::DrawImage(const std::shared_ptr<Image>& image,
@@ -510,15 +514,12 @@ void Canvas::SaveLayer(const Paint& paint,
 void Canvas::DrawTextFrame(const TextFrame& text_frame,
                            Point position,
                            const Paint& paint) {
-  lazy_glyph_atlas_->AddTextFrame(text_frame);
-
   Entity entity;
   entity.SetStencilDepth(GetStencilDepth());
   entity.SetBlendMode(paint.blend_mode);
 
   auto text_contents = std::make_shared<TextContents>();
   text_contents->SetTextFrame(text_frame);
-  text_contents->SetGlyphAtlas(lazy_glyph_atlas_);
 
   if (paint.color_source.GetType() != ColorSource::Type::kColor) {
     auto color_text_contents = std::make_shared<ColorSourceTextContents>();

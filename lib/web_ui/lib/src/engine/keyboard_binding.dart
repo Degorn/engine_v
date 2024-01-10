@@ -377,9 +377,9 @@ class KeyboardConverter {
   void _handleEvent(FlutterHtmlKeyboardEvent event) {
     final Duration timeStamp = _eventTimeStampToDuration(event.timeStamp!);
 
-    final eventKey = event.key!;
-    int physicalKey = _getPhysicalCode(event.code!);
+    final String eventKey = event.key!;
 
+    final int physicalKey = _getPhysicalCode(event.code!);
     final bool logicalKeyIsCharacter = !_eventKeyIsKeyName(eventKey);
     // The function body might or might not be evaluated. If the event is a key
     // up event, the resulting event will simply use the currently pressed
@@ -388,19 +388,6 @@ class KeyboardConverter {
       // Mapped logical keys, such as ArrowLeft, Escape, AudioVolumeDown.
       final int? mappedLogicalKey = kWebToLogicalKey[eventKey];
       if (mappedLogicalKey != null) {
-        if(mappedLogicalKey == 0x00100000001) {        
-          switch(event.keyCode) {
-            case 412:
-              return 0x00100000d31; //Rewind
-            case 413:
-              return 0x00100000a07; // Stop
-            case 415:
-              return 0x00100000d2f; //Play
-            case 417:
-              return 0x00100000d2c; // Fast Forward
-          }
-        }
-        
         return mappedLogicalKey;
       }
       // Keys with locations, such as modifier keys (Shift) or numpad keys.

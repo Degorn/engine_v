@@ -81,41 +81,20 @@ class AssetManager {
   }
 
   /// Loads an asset and returns the server response.
-  Future<HttpFetchResponse> loadAsset(String asset) async {
-    final ByteData result = await load(asset);
-
-    return HttpFetchResponseImpl.fromByteData(result, asset);
+  Future<Object> loadAsset(String asset) {
+    return httpFetch(getAssetUrl(asset));
   }
 
   /// Loads an asset using an [XMLHttpRequest] and returns data as [ByteData].
   Future<ByteData> load(String asset) async {
     final String url = getAssetUrl(asset);
-    try {
-      final DomXMLHttpRequest request =
-          await domHttpRequest(url, responseType: 'arraybuffer');
+    final HttpFetchResponse response = await httpFetch(url);
 
-      final ByteBuffer response = request.response as ByteBuffer;
-      return response.asByteData();
-    } catch (e) {
-      if (!domInstanceOfString(e, 'ProgressEvent')) {
-        rethrow;
-      }
-      final DomProgressEvent p = e as DomProgressEvent;
-      final DomEventTarget? target = p.target;
-      if (domInstanceOfString(target, 'XMLHttpRequest')) {
-        final DomXMLHttpRequest request = target! as DomXMLHttpRequest;
-        if (request.status == 404 && asset == 'AssetManifest.json') {
-          printWarning('Asset manifest does not exist at `$url` – ignoring.');
-          return Uint8List.fromList(utf8.encode('{}')).buffer.asByteData();
-        }
-        rethrow;
-      }
-
-      final String? constructorName =
-          target == null ? 'null' : domGetConstructorName(target);
-      printWarning('Caught ProgressEvent with unknown target: '
-          '$constructorName');
-      rethrow;
+    if (response.status == 404 && asset == 'AssetManifest.json') {
+      printWarning('Asset manifest does not exist at `$url` - ignoring.');
+      return ByteData.sublistView(utf8.encode('{}'));
     }
+
+    return (await response.payload.asByteBuffer()).asByteData();
   }
 }

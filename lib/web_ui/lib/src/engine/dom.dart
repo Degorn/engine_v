@@ -3,7 +3,6 @@
 // found in the LICENSE file.
 
 import 'dart:async';
-import 'dart:convert';
 import 'dart:js_interop';
 import 'dart:math' as math;
 import 'dart:typed_data';
@@ -42,9 +41,6 @@ extension ObjectToJSAnyExtension on Object {
     if (isWasm) {
       return toJSAnyDeep;
     } else {
-      // TODO(joshualitt): remove this cast when we reify JS types on JS
-      // backends.
-      // ignore: unnecessary_cast
       return this as JSAny;
     }
   }
@@ -65,8 +61,16 @@ extension JSAnyToObjectExtension on JSAny {
 }
 
 @JS('Object')
-external JSAny get _objectConstructor;
-Object get objectConstructor => _objectConstructor.toObjectShallow;
+external DomObjectConstructor get objectConstructor;
+
+
+@JS()
+@staticInterop
+class DomObjectConstructor {}
+
+extension DomObjectConstructorExtension on DomObjectConstructor {
+  external JSAny assign(JSAny target, JSAny? source1, [JSAny? source2]);
+}
 
 @JS()
 @staticInterop
@@ -77,18 +81,18 @@ extension DomWindowExtension on DomWindow {
 
   @JS('devicePixelRatio')
   external JSNumber get _devicePixelRatio;
-  double get devicePixelRatio => _devicePixelRatio.toDart;
+  double get devicePixelRatio => _devicePixelRatio.toDartDouble;
 
   external DomDocument get document;
   external DomHistory get history;
 
   @JS('innerHeight')
   external JSNumber? get _innerHeight;
-  double? get innerHeight => _innerHeight?.toDart;
+  double? get innerHeight => _innerHeight?.toDartDouble;
 
   @JS('innerWidth')
   external JSNumber? get _innerWidth;
-  double? get innerWidth => _innerWidth?.toDart;
+  double? get innerWidth => _innerWidth?.toDartDouble;
 
   external DomLocation get location;
   external DomNavigator get navigator;
@@ -140,7 +144,7 @@ extension DomWindowExtension on DomWindow {
   @JS('requestAnimationFrame')
   external JSNumber _requestAnimationFrame(JSFunction callback);
   double requestAnimationFrame(DomRequestAnimationFrameCallback callback) =>
-      _requestAnimationFrame(callback.toJS).toDart;
+      _requestAnimationFrame(callback.toJS).toDartDouble;
 
   @JS('postMessage')
   external JSVoid _postMessage1(JSAny message, JSString targetOrigin);
@@ -204,7 +208,7 @@ extension DomNavigatorExtension on DomNavigator {
 
   @JS('maxTouchPoints')
   external JSNumber? get _maxTouchPoints;
-  double? get maxTouchPoints => _maxTouchPoints?.toDart;
+  double? get maxTouchPoints => _maxTouchPoints?.toDartDouble;
 
   @JS('vendor')
   external JSString get _vendor;
@@ -369,7 +373,9 @@ extension DomEventTargetExtension on DomEventTarget {
 
 typedef DartDomEventListener = JSVoid Function(DomEvent event);
 
-typedef DomEventListener = void Function(DomEvent event);
+@JS()
+@staticInterop
+class DomEventListener {}
 
 DomEventListener createDomEventListener(DartDomEventListener listener) =>
     listener.toJS as DomEventListener;
@@ -384,7 +390,7 @@ extension DomEventExtension on DomEvent {
 
   @JS('timeStamp')
   external JSNumber? get _timeStamp;
-  double? get timeStamp => _timeStamp?.toDart;
+  double? get timeStamp => _timeStamp?.toDartDouble;
 
   @JS('type')
   external JSString get _type;
@@ -431,11 +437,11 @@ class DomProgressEvent extends DomEvent {
 extension DomProgressEventExtension on DomProgressEvent {
   @JS('loaded')
   external JSNumber? get _loaded;
-  double? get loaded => _loaded?.toDart;
+  double? get loaded => _loaded?.toDartDouble;
 
   @JS('total')
   external JSNumber? get _total;
-  double? get total => _total?.toDart;
+  double? get total => _total?.toDartDouble;
 }
 
 @JS()
@@ -527,11 +533,11 @@ extension DomElementExtension on DomElement {
 
   @JS('clientHeight')
   external JSNumber get _clientHeight;
-  double get clientHeight => _clientHeight.toDart;
+  double get clientHeight => _clientHeight.toDartDouble;
 
   @JS('clientWidth')
   external JSNumber get _clientWidth;
-  double get clientWidth => _clientWidth.toDart;
+  double get clientWidth => _clientWidth.toDartDouble;
 
   @JS('id')
   external JSString get _id;
@@ -596,13 +602,13 @@ extension DomElementExtension on DomElement {
 
   @JS('tabIndex')
   external JSNumber? get _tabIndex;
-  double? get tabIndex => _tabIndex?.toDart;
+  double? get tabIndex => _tabIndex?.toDartDouble;
 
   external JSVoid focus();
 
   @JS('scrollTop')
   external JSNumber get _scrollTop;
-  double get scrollTop => _scrollTop.toDart;
+  double get scrollTop => _scrollTop.toDartDouble;
 
   @JS('scrollTop')
   external set _scrollTop(JSNumber value);
@@ -610,7 +616,7 @@ extension DomElementExtension on DomElement {
 
   @JS('scrollLeft')
   external JSNumber get _scrollLeft;
-  double get scrollLeft => _scrollLeft.toDart;
+  double get scrollLeft => _scrollLeft.toDartDouble;
 
   @JS('scrollLeft')
   external set _scrollLeft(JSNumber value);
@@ -827,15 +833,15 @@ class DomHTMLElement extends DomElement {}
 extension DomHTMLElementExtension on DomHTMLElement {
   @JS('offsetWidth')
   external JSNumber get _offsetWidth;
-  double get offsetWidth => _offsetWidth.toDart;
+  double get offsetWidth => _offsetWidth.toDartDouble;
 
   @JS('offsetLeft')
   external JSNumber get _offsetLeft;
-  double get offsetLeft => _offsetLeft.toDart;
+  double get offsetLeft => _offsetLeft.toDartDouble;
 
   @JS('offsetTop')
   external JSNumber get _offsetTop;
-  double get offsetTop => _offsetTop.toDart;
+  double get offsetTop => _offsetTop.toDartDouble;
 
   external DomHTMLElement? get offsetParent;
 }
@@ -900,11 +906,11 @@ extension DomHTMLImageElementExtension on DomHTMLImageElement {
 
   @JS('naturalWidth')
   external JSNumber get _naturalWidth;
-  double get naturalWidth => _naturalWidth.toDart;
+  double get naturalWidth => _naturalWidth.toDartDouble;
 
   @JS('naturalHeight')
   external JSNumber get _naturalHeight;
-  double get naturalHeight => _naturalHeight.toDart;
+  double get naturalHeight => _naturalHeight.toDartDouble;
 
   @JS('width')
   external set _width(JSNumber? value);
@@ -1018,7 +1024,7 @@ extension DomPerformanceExtension on DomPerformance {
 
   @JS('now')
   external JSNumber _now();
-  double now() => _now().toDart;
+  double now() => _now().toDartDouble;
 }
 
 @JS()
@@ -1057,7 +1063,7 @@ DomCanvasElement createDomCanvasElement({int? width, int? height}) {
 extension DomCanvasElementExtension on DomCanvasElement {
   @JS('width')
   external JSNumber? get _width;
-  double? get width => _width?.toDart;
+  double? get width => _width?.toDartDouble;
 
   @JS('width')
   external set _width(JSNumber? value);
@@ -1065,7 +1071,7 @@ extension DomCanvasElementExtension on DomCanvasElement {
 
   @JS('height')
   external JSNumber? get _height;
-  double? get height => _height?.toDart;
+  double? get height => _height?.toDartDouble;
 
   @JS('height')
   external set _height(JSNumber? value);
@@ -1109,15 +1115,15 @@ class WebGLContext {}
 extension WebGLContextExtension on WebGLContext {
   @JS('getParameter')
   external JSNumber _getParameter(JSNumber value);
-  int getParameter(int value) => _getParameter(value.toJS).toDart.toInt();
+  int getParameter(int value) => _getParameter(value.toJS).toDartDouble.toInt();
 
   @JS('SAMPLES')
   external JSNumber get _samples;
-  int get samples => _samples.toDart.toInt();
+  int get samples => _samples.toDartDouble.toInt();
 
   @JS('STENCIL_BITS')
   external JSNumber get _stencilBits;
-  int get stencilBits => _stencilBits.toDart.toInt();
+  int get stencilBits => _stencilBits.toDartDouble.toInt();
 }
 
 @JS()
@@ -1419,75 +1425,12 @@ extension DomCanvasGradientExtension on DomCanvasGradient {
       _addColorStop(offset.toJS, color.toJS);
 }
 
-String? domGetConstructorName(Object o) {
-  final Object? constructor = js_util.getProperty(o, 'constructor');
-  if (constructor == null) {
-    return '';
-  }
-  return js_util.getProperty(constructor, 'name')?.toString();
-}
-
-Object? domGetConstructor(String constructorName) =>
-    js_util.getProperty(domWindow, constructorName);
-
-@JS()
-@staticInterop
-class DomXMLHttpRequest extends DomXMLHttpRequestEventTarget {}
-
-Object? domCallConstructorString(String constructorName, List<Object?> args) {
-  final Object? constructor = domGetConstructor(constructorName);
-  if (constructor == null) {
-    return null;
-  }
-  return js_util.callConstructor(constructor, args);
-}
-
-DomXMLHttpRequest createDomXMLHttpRequest() =>
-    domCallConstructorString('XMLHttpRequest', <Object?>[])!
-        as DomXMLHttpRequest;
-
-Future<DomXMLHttpRequest> domHttpRequest(String url,
-    {String? responseType, String method = 'GET', dynamic sendData}) {
-  final Completer<DomXMLHttpRequest> completer = Completer<DomXMLHttpRequest>();
-  final DomXMLHttpRequest xhr = createDomXMLHttpRequest();
-  xhr.open(method, url, /* async */ true);
-  if (responseType != null) {
-    xhr.responseType = responseType;
-  }
-
-  xhr.addEventListener('load', allowInterop((DomEvent e) {
-    final int status = xhr.status!;
-    final bool accepted = status >= 200 && status < 300;
-    final bool fileUri = status == 0;
-    final bool notModified = status == 304;
-    final bool unknownRedirect = status > 307 && status < 400;
-    if (accepted || fileUri || notModified || unknownRedirect) {
-      completer.complete(xhr);
-    } else {
-      completer.completeError(e);
-    }
-  }));
-
-  xhr.addEventListener('error', allowInterop(completer.completeError));
-  xhr.send(sendData);
-  return completer.future;
-}
-
-extension DomXMLHttpRequestExtension on DomXMLHttpRequest {
-  external dynamic get response;
-  external String? get responseText;
-  external String get responseType;
-  external int? get status;
-  external set responseType(String value);
-  void open(String method, String url, [bool? async]) => js_util.callMethod(
-      this, 'open', <Object>[method, url, if (async != null) async]);
-  void send([Object? bodyOrData]) => js_util
-      .callMethod(this, 'send', <Object>[if (bodyOrData != null) bodyOrData]);
-}
-
 @JS()
 @staticInterop
 class DomXMLHttpRequestEventTarget extends DomEventTarget {}
+
+Future<DomResponse> rawHttpGet(String url) =>
+    js_util.promiseToFuture<DomResponse>(domWindow._fetch1(url.toJS));
 
 typedef MockHttpFetchResponseFactory = Future<MockHttpFetchResponse?> Function(
     String url);
@@ -1515,36 +1458,10 @@ Future<HttpFetchResponse> httpFetch(String url) async {
     }
   }
   try {
-    final ByteData result = await load(url);
-    return HttpFetchResponseImpl.fromByteData(result, url);
+    final DomResponse domResponse = await rawHttpGet(url);
+    return HttpFetchResponseImpl._(url, domResponse);
   } catch (requestError) {
     throw HttpFetchError(url, requestError: requestError);
-  }
-}
-
-Future<ByteData> load(String asset) async {
-  final String url = asset;
-  try {
-    final DomXMLHttpRequest request =
-        await domHttpRequest(url, responseType: 'arraybuffer');
-
-    final ByteBuffer response = request.response as ByteBuffer;
-    return response.asByteData();
-  } catch (e) {
-    if (!domInstanceOfString(e, 'ProgressEvent')) {
-      rethrow;
-    }
-    final DomProgressEvent p = e as DomProgressEvent;
-    final DomEventTarget? target = p.target;
-    if (domInstanceOfString(target, 'XMLHttpRequest')) {
-      final DomXMLHttpRequest request = target! as DomXMLHttpRequest;
-      if (request.status == 404 && asset == 'AssetManifest.json') {
-        return Uint8List.fromList(utf8.encode('{}')).buffer.asByteData();
-      }
-      rethrow;
-    }
-
-    rethrow;
   }
 }
 
@@ -1566,7 +1483,12 @@ Future<DomResponse> _rawHttpPost(String url, String data) =>
 /// is meant for tests only.
 @visibleForTesting
 Future<HttpFetchResponse> testOnlyHttpPost(String url, String data) async {
- throw 'Not implemented';
+  try {
+    final DomResponse domResponse = await _rawHttpPost(url, data);
+    return HttpFetchResponseImpl._(url, domResponse);
+  } catch (requestError) {
+    throw HttpFetchError(url, requestError: requestError);
+  }
 }
 
 /// Convenience function for making a fetch request and getting the data as a
@@ -1640,7 +1562,7 @@ extension HttpFetchResponseExtension on HttpFetchResponse {
 
   /// Returns the data parsed as JSON.
   Future<dynamic> json() {
-    return payload.toJson();
+    return payload.json();
   }
 
   /// Return the data as a string.
@@ -1650,33 +1572,41 @@ extension HttpFetchResponseExtension on HttpFetchResponse {
 }
 
 class HttpFetchResponseImpl implements HttpFetchResponse {
-factory HttpFetchResponseImpl.fromByteData(ByteData byteData, String url) {
-    return HttpFetchResponseImpl._(
-      byteData.lengthInBytes,
-      byteData.lengthInBytes > 0,
-      HttpFetchPayloadImpl(byteData),
-      0,
-      url,
-    );
+  HttpFetchResponseImpl._(this.url, this._domResponse);
+
+  @override
+  final String url;
+
+  final DomResponse _domResponse;
+
+  @override
+  int get status => _domResponse.status;
+
+  @override
+  int? get contentLength {
+    final String? header = _domResponse.headers.get('Content-Length');
+    if (header == null) {
+      return null;
+    }
+    return int.tryParse(header);
   }
 
-HttpFetchResponseImpl._(
-    this.contentLength,
-    this.hasPayload,
-    this.payload,
-    this.status,
-    this.url,
-  );
+  @override
+  bool get hasPayload {
+    final bool accepted = status >= 200 && status < 300;
+    final bool fileUri = status == 0;
+    final bool notModified = status == 304;
+    final bool unknownRedirect = status > 307 && status < 400;
+    return accepted || fileUri || notModified || unknownRedirect;
+  }
 
-  bool hasPayload;
-
-  HttpFetchPayload payload;
-
-  int? contentLength;
-
-  int status;
-
-  String url;
+  @override
+  HttpFetchPayload get payload {
+    if (!hasPayload) {
+      throw HttpFetchNoPayloadError(url, status: status);
+    }
+    return HttpFetchPayloadImpl._(_domResponse);
+  }
 }
 
 /// A fake implementation of [HttpFetchResponse] for testing.
@@ -1720,58 +1650,44 @@ abstract class HttpFetchPayload {
   Future<ByteBuffer> asByteBuffer();
 
   /// Returns the data parsed as JSON.
-  Future<dynamic> toJson();
+  Future<dynamic> json();
 
   /// Return the data as a string.
   Future<String> text();
 }
 
-class HttpFetchPayloadImpl extends HttpFetchPayload {
-  HttpFetchPayloadImpl(
-    this.byteData, [
-    this._domResponse,
-  ]);
+class HttpFetchPayloadImpl implements HttpFetchPayload {
+  HttpFetchPayloadImpl._(this._domResponse);
 
-  final DomResponse? _domResponse;
-  final ByteData byteData;
+  final DomResponse _domResponse;
 
   @override
-  Future<dynamic> toJson() {
-    return Future<dynamic>.value(
-        json.decode(utf8.decode(byteData.buffer.asUint8List())));
+  Future<void> read<T>(HttpFetchReader<T> callback) async {
+    final _DomReadableStream stream = _domResponse.body;
+    final _DomStreamReader reader = stream.getReader();
+
+    while (true) {
+      final _DomStreamChunk chunk = await reader.read();
+      if (chunk.done) {
+        break;
+      }
+      callback(chunk.value as T);
+    }
   }
 
   /// Returns the data as a [ByteBuffer].
   @override
   Future<ByteBuffer> asByteBuffer() async {
-    return byteData.buffer;
+    return (await _domResponse.arrayBuffer())! as ByteBuffer;
   }
 
+  /// Returns the data parsed as JSON.
   @override
-  Future<void> read<T>(HttpFetchReader<T> reader) async {
-    if (_domResponse == null) {
-      print('AZAZAZA _domResponse == null');
-      throw UnimplementedError();
-    }
-
-    final _DomReadableStream stream = _domResponse!.body;
-    final _DomStreamReader domReader = stream.getReader();
-
-    while (true) {
-      final _DomStreamChunk chunk = await domReader.read();
-      if (chunk.done) {
-        break;
-      }
-      reader(chunk.value as T);
-    }
-  }
+  Future<dynamic> json() => _domResponse.json();
 
   /// Return the data as a string.
   @override
-  Future<String> text() {
-    return Future<String>.value(
-        String.fromCharCodes(byteData.buffer.asUint8List()));
-  }
+  Future<String> text() => _domResponse.text();
 }
 
 typedef MockOnRead = Future<void> Function<T>(HttpFetchReader<T> callback);
@@ -1804,7 +1720,7 @@ class MockHttpFetchPayload implements HttpFetchPayload {
   Future<ByteBuffer> asByteBuffer() async => _byteBuffer;
 
   @override
-  Future<dynamic> toJson() async => throw AssertionError('json not supported by mock');
+  Future<dynamic> json() async => throw AssertionError('json not supported by mock');
 
   @override
   Future<String> text() async => throw AssertionError('text not supported by mock');
@@ -1867,7 +1783,7 @@ class DomResponse {}
 extension DomResponseExtension on DomResponse {
   @JS('status')
   external JSNumber get _status;
-  int get status => _status.toDart.toInt();
+  int get status => _status.toDartInt;
 
   external DomHeaders get headers;
 
@@ -1945,7 +1861,7 @@ class DomTextMetrics {}
 extension DomTextMetricsExtension on DomTextMetrics {
   @JS('width')
   external JSNumber? get _width;
-  double? get width => _width?.toDart;
+  double? get width => _width?.toDartDouble;
 }
 
 @JS()
@@ -1967,35 +1883,35 @@ class DomRectReadOnly {}
 extension DomRectReadOnlyExtension on DomRectReadOnly {
   @JS('x')
   external JSNumber get _x;
-  double get x => _x.toDart;
+  double get x => _x.toDartDouble;
 
   @JS('y')
   external JSNumber get _y;
-  double get y => _y.toDart;
+  double get y => _y.toDartDouble;
 
   @JS('width')
   external JSNumber get _width;
-  double get width => _width.toDart;
+  double get width => _width.toDartDouble;
 
   @JS('height')
   external JSNumber get _height;
-  double get height => _height.toDart;
+  double get height => _height.toDartDouble;
 
   @JS('top')
   external JSNumber get _top;
-  double get top => _top.toDart;
+  double get top => _top.toDartDouble;
 
   @JS('right')
   external JSNumber get _right;
-  double get right => _right.toDart;
+  double get right => _right.toDartDouble;
 
   @JS('bottom')
   external JSNumber get _bottom;
-  double get bottom => _bottom.toDart;
+  double get bottom => _bottom.toDartDouble;
 
   @JS('left')
   external JSNumber get _left;
-  double get left => _left.toDart;
+  double get left => _left.toDartDouble;
 }
 
 DomRect createDomRectFromPoints(DomPoint a, DomPoint b) {
@@ -2073,11 +1989,11 @@ class DomVisualViewport extends DomEventTarget {}
 extension DomVisualViewportExtension on DomVisualViewport {
   @JS('height')
   external JSNumber? get _height;
-  double? get height => _height?.toDart;
+  double? get height => _height?.toDartDouble;
 
   @JS('width')
   external JSNumber? get _width;
-  double? get width => _width?.toDart;
+  double? get width => _width?.toDartDouble;
 }
 
 @JS()
@@ -2104,11 +2020,11 @@ extension DomHTMLTextAreaElementExtension on DomHTMLTextAreaElement {
 
   @JS('selectionStart')
   external JSNumber? get _selectionStart;
-  double? get selectionStart => _selectionStart?.toDart;
+  double? get selectionStart => _selectionStart?.toDartDouble;
 
   @JS('selectionEnd')
   external JSNumber? get _selectionEnd;
-  double? get selectionEnd => _selectionEnd?.toDart;
+  double? get selectionEnd => _selectionEnd?.toDartDouble;
 
   @JS('selectionStart')
   external set _selectionStart(JSNumber? value);
@@ -2189,11 +2105,11 @@ extension DomKeyboardEventExtension on DomKeyboardEvent {
 
   @JS('keyCode')
   external JSNumber get _keyCode;
-  double get keyCode => _keyCode.toDart;
+  double get keyCode => _keyCode.toDartDouble;
 
   @JS('location')
   external JSNumber get _location;
-  double get location => _location.toDart;
+  double get location => _location.toDartDouble;
 
   @JS('metaKey')
   external JSBoolean get _metaKey;
@@ -2443,38 +2359,38 @@ class DomMouseEvent extends DomUIEvent {
 extension DomMouseEventExtension on DomMouseEvent {
   @JS('clientX')
   external JSNumber get _clientX;
-  double get clientX => _clientX.toDart;
+  double get clientX => _clientX.toDartDouble;
 
   @JS('clientY')
   external JSNumber get _clientY;
-  double get clientY => _clientY.toDart;
+  double get clientY => _clientY.toDartDouble;
 
   @JS('offsetX')
   external JSNumber get _offsetX;
-  double get offsetX => _offsetX.toDart;
+  double get offsetX => _offsetX.toDartDouble;
 
   @JS('offsetY')
   external JSNumber get _offsetY;
-  double get offsetY => _offsetY.toDart;
+  double get offsetY => _offsetY.toDartDouble;
 
   @JS('pageX')
   external JSNumber get _pageX;
-  double get pageX => _pageX.toDart;
+  double get pageX => _pageX.toDartDouble;
 
   @JS('pageY')
   external JSNumber get _pageY;
-  double get pageY => _pageY.toDart;
+  double get pageY => _pageY.toDartDouble;
 
   DomPoint get client => DomPoint(clientX, clientY);
   DomPoint get offset => DomPoint(offsetX, offsetY);
 
   @JS('button')
   external JSNumber get _button;
-  double get button => _button.toDart;
+  double get button => _button.toDartDouble;
 
   @JS('buttons')
   external JSNumber? get _buttons;
-  double? get buttons => _buttons?.toDart;
+  double? get buttons => _buttons?.toDartDouble;
 
   @JS('ctrlKey')
   external JSBoolean get _ctrlKey;
@@ -2503,7 +2419,7 @@ class DomPointerEvent extends DomMouseEvent {
 extension DomPointerEventExtension on DomPointerEvent {
   @JS('pointerId')
   external JSNumber? get _pointerId;
-  double? get pointerId => _pointerId?.toDart;
+  double? get pointerId => _pointerId?.toDartDouble;
 
   @JS('pointerType')
   external JSString? get _pointerType;
@@ -2511,15 +2427,15 @@ extension DomPointerEventExtension on DomPointerEvent {
 
   @JS('pressure')
   external JSNumber? get _pressure;
-  double? get pressure => _pressure?.toDart;
+  double? get pressure => _pressure?.toDartDouble;
 
   @JS('tiltX')
   external JSNumber? get _tiltX;
-  double? get tiltX => _tiltX?.toDart;
+  double? get tiltX => _tiltX?.toDartDouble;
 
   @JS('tiltY')
   external JSNumber? get _tiltY;
-  double? get tiltY => _tiltY?.toDart;
+  double? get tiltY => _tiltY?.toDartDouble;
 
   @JS('getCoalescedEvents')
   external JSArray _getCoalescedEvents();
@@ -2546,23 +2462,23 @@ class DomWheelEvent extends DomMouseEvent {
 extension DomWheelEventExtension on DomWheelEvent {
   @JS('deltaX')
   external JSNumber get _deltaX;
-  double get deltaX => _deltaX.toDart;
+  double get deltaX => _deltaX.toDartDouble;
 
   @JS('deltaY')
   external JSNumber get _deltaY;
-  double get deltaY => _deltaY.toDart;
+  double get deltaY => _deltaY.toDartDouble;
 
   @JS('wheelDeltaX')
   external JSNumber? get _wheelDeltaX;
-  double? get wheelDeltaX => _wheelDeltaX?.toDart;
+  double? get wheelDeltaX => _wheelDeltaX?.toDartDouble;
 
   @JS('wheelDeltaY')
   external JSNumber? get _wheelDeltaY;
-  double? get wheelDeltaY => _wheelDeltaY?.toDart;
+  double? get wheelDeltaY => _wheelDeltaY?.toDartDouble;
 
   @JS('deltaMode')
   external JSNumber get _deltaMode;
-  double get deltaMode => _deltaMode.toDart;
+  double get deltaMode => _deltaMode.toDartDouble;
 }
 
 DomWheelEvent createDomWheelEvent(String type, [Map<dynamic, dynamic>? init]) {
@@ -2613,15 +2529,15 @@ class DomTouch {
 extension DomTouchExtension on DomTouch {
   @JS('identifier')
   external JSNumber? get _identifier;
-  double? get identifier => _identifier?.toDart;
+  double? get identifier => _identifier?.toDartDouble;
 
   @JS('clientX')
   external JSNumber get _clientX;
-  double get clientX => _clientX.toDart;
+  double get clientX => _clientX.toDartDouble;
 
   @JS('clientY')
   external JSNumber get _clientY;
-  double get clientY => _clientY.toDart;
+  double get clientY => _clientY.toDartDouble;
 
   DomPoint get client => DomPoint(clientX, clientY);
 }
@@ -2711,11 +2627,11 @@ extension DomHTMLInputElementExtension on DomHTMLInputElement {
 
   @JS('selectionStart')
   external JSNumber? get _selectionStart;
-  double? get selectionStart => _selectionStart?.toDart;
+  double? get selectionStart => _selectionStart?.toDartDouble;
 
   @JS('selectionEnd')
   external JSNumber? get _selectionEnd;
-  double? get selectionEnd => _selectionEnd?.toDart;
+  double? get selectionEnd => _selectionEnd?.toDartDouble;
 
   @JS('selectionStart')
   external set _selectionStart(JSNumber? value);
@@ -2813,11 +2729,11 @@ class DomOffscreenCanvas extends DomEventTarget {
 extension DomOffscreenCanvasExtension on DomOffscreenCanvas {
   @JS('height')
   external JSNumber? get _height;
-  double? get height => _height?.toDart;
+  double? get height => _height?.toDartDouble;
 
   @JS('width')
   external JSNumber? get _width;
-  double? get width => _width?.toDart;
+  double? get width => _width?.toDartDouble;
 
   @JS('height')
   external set _height(JSNumber? value);
@@ -2926,9 +2842,9 @@ extension DomCSSStyleSheetExtension on DomCSSStyleSheet {
   external JSNumber _insertRule2(JSString rule, JSNumber index);
   double insertRule(String rule, [int? index]) {
     if (index == null) {
-      return _insertRule1(rule.toJS).toDart;
+      return _insertRule1(rule.toJS).toDartDouble;
     } else {
-      return _insertRule2(rule.toJS, index.toJS).toDart;
+      return _insertRule2(rule.toJS, index.toJS).toDartDouble;
     }
   }
 }
@@ -3280,7 +3196,7 @@ class _DomList {}
 extension DomListExtension on _DomList {
   @JS('length')
   external JSNumber get _length;
-  double get length => _length.toDart;
+  double get length => _length.toDartDouble;
 
   @JS('item')
   external DomNode _item(JSNumber index);
@@ -3332,7 +3248,7 @@ class _DomTouchList {}
 extension DomTouchListExtension on _DomTouchList {
   @JS('length')
   external JSNumber get _length;
-  double get length => _length.toDart;
+  double get length => _length.toDartDouble;
 
   @JS('item')
   external DomNode _item(JSNumber index);
@@ -3475,7 +3391,7 @@ class DomSegment {}
 extension DomSegmentExtension on DomSegment {
   @JS('index')
   external JSNumber get _index;
-  int get index => _index.toDart.toInt();
+  int get index => _index.toDartDouble.toInt();
 
   @JS('isWordLike')
   external JSBoolean get _isWordLike;
@@ -3513,15 +3429,15 @@ extension DomV8BreakIteratorExtension on DomV8BreakIterator {
 
   @JS('first')
   external JSNumber _first();
-  double first() => _first().toDart;
+  double first() => _first().toDartDouble;
 
   @JS('next')
   external JSNumber _next();
-  double next() => _next().toDart;
+  double next() => _next().toDartDouble;
 
   @JS('current')
   external JSNumber _current();
-  double current() => _current().toDart;
+  double current() => _current().toDartDouble;
 
   @JS('breakType')
   external JSString _breakType();
